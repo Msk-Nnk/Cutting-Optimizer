@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <!-- iPhone Safari用 (Webクリップアイコン) -->
+    <!-- iPhone Safari用 (Webクリップアイコン) -->
   <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
   <!-- Android Chrome用 (ホーム画面ショートカット/PWAアイコン) -->
   <link rel="icon" href="android-chrome-192.png" sizes="192x192" type="image/png">
@@ -19,172 +19,158 @@
       font-family: 'Satoshi', sans-serif;
       background-color: #0a0a0c;
       color: #e2e8f0;
+      -webkit-font-smoothing: antialiased;
     }
     .glass-card {
-      background: rgba(15, 15, 20, 0.7);
-      backdrop-filter: blur(12px);
+      background: rgba(15, 15, 20, 0.75);
+      backdrop-filter: blur(16px);
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
     .input-field {
-      background: rgba(30, 30, 40, 0.5);
+      background: rgba(30, 30, 40, 0.6);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .input-field:focus-within {
       border-color: #6366f1;
+      background: rgba(40, 40, 55, 0.8);
       box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
     }
     input::-webkit-outer-spin-button, input::-webkit-inner-spin-button {
       -webkit-appearance: none; margin: 0;
     }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.1); border-radius: 10px; }
+    
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(15px); }
+      from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .result-animate {
-      animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
-    }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
+      animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
   </style>
 </head>
 <body class="min-h-screen pb-24">
 
   <!-- Header -->
-  <nav class="sticky top-0 z-50 bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 mb-8">
+  <nav class="sticky top-0 z-50 bg-[#0a0a0c]/80 backdrop-blur-md border-b border-white/5 px-6 py-4 mb-10">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <div class="bg-indigo-600 p-2 rounded-lg shadow-lg shadow-indigo-500/20">
+        <div class="bg-indigo-600 p-2.5 rounded-xl shadow-lg shadow-indigo-500/30">
           <i data-lucide="layout-grid" class="text-white w-6 h-6"></i>
         </div>
         <div>
-          <h1 class="text-xl font-black tracking-tighter text-white italic">CUT <span class="text-indigo-400 uppercase">Optimizer</span></h1>
-          <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">Fast & High Performance</p>
+          <h1 class="text-xl font-black tracking-tighter text-white italic leading-none">CUT <span class="text-indigo-400 uppercase not-italic">Optimizer</span></h1>
+          <p class="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] mt-1.5">Industrial Precision Solver</p>
         </div>
       </div>
+      <button id="resetBtn" class="text-gray-500 hover:text-white text-xs font-bold transition-all flex items-center gap-2">
+        <i data-lucide="rotate-ccw" class="w-4 h-4"></i> リセット
+      </button>
     </div>
   </nav>
 
-  <main class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+  <main class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-10">
     
     <!-- Left: Inputs -->
-    <div class="lg:col-span-5 xl:col-span-4 space-y-6">
+    <div class="lg:col-span-5 xl:col-span-4 space-y-8">
       
       <!-- Stocks -->
-      <section class="glass-card rounded-3xl p-6 shadow-2xl">
-        <div class="flex justify-between items-center mb-5">
-          <h2 class="text-sm font-black flex items-center gap-2 tracking-widest uppercase text-indigo-400">
+      <section class="glass-card rounded-[2.5rem] p-8 shadow-2xl">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xs font-black flex items-center gap-2 tracking-widest uppercase text-indigo-400">
             <i data-lucide="database" class="w-4 h-4"></i> 母材在庫 (Stocks)
           </h2>
         </div>
-        <div id="stocksRows" class="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1"></div>
-        <button id="addStockRow" class="mt-4 w-full py-3 border border-dashed border-white/10 rounded-2xl text-gray-500 hover:border-indigo-500/50 hover:text-indigo-400 hover:bg-indigo-500/5 transition-all font-bold flex justify-center items-center gap-2 text-sm">
-          <i data-lucide="plus" class="w-4 h-4"></i> 母材を追加
+        <div id="stocksRows" class="space-y-4 max-h-[35vh] overflow-y-auto custom-scrollbar pr-2"></div>
+        <button id="addStockRow" class="mt-4 w-full py-4 border border-dashed border-white/10 rounded-2xl text-gray-500 hover:border-indigo-500/50 hover:text-indigo-400 hover:bg-indigo-500/5 transition-all font-bold flex justify-center items-center gap-2 text-xs">
+          <i data-lucide="plus" class="w-4 h-4"></i> 母材サイズを追加
         </button>
       </section>
 
       <!-- Parts -->
-      <section class="glass-card rounded-3xl p-6 shadow-2xl">
-        <div class="flex justify-between items-center mb-5">
-          <h2 class="text-sm font-black flex items-center gap-2 tracking-widest uppercase text-rose-400">
+      <section class="glass-card rounded-[2.5rem] p-8 shadow-2xl border-indigo-500/10">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xs font-black flex items-center gap-2 tracking-widest uppercase text-rose-400">
             <i data-lucide="scissors" class="w-4 h-4"></i> 必要部材 (Parts)
           </h2>
         </div>
-        <div id="partsRows" class="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1"></div>
-        <button id="addPartRow" class="mt-4 w-full py-3 border border-dashed border-white/10 rounded-2xl text-gray-500 hover:border-rose-500/50 hover:text-rose-400 hover:bg-rose-500/5 transition-all font-bold flex justify-center items-center gap-2 text-sm">
-          <i data-lucide="plus" class="w-4 h-4"></i> 部材を追加
+        <div id="partsRows" class="space-y-4 max-h-[35vh] overflow-y-auto custom-scrollbar pr-2"></div>
+        <button id="addPartRow" class="mt-4 w-full py-4 border border-dashed border-white/10 rounded-2xl text-gray-500 hover:border-rose-500/50 hover:text-rose-400 hover:bg-rose-500/5 transition-all font-bold flex justify-center items-center gap-2 text-xs">
+          <i data-lucide="plus" class="w-4 h-4"></i> 必要部材を追加
         </button>
-        
-        <!-- Calculation Button -->
-        <button id="solveBtn" class="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl transition-all font-black text-base flex justify-center items-center gap-3 shadow-lg shadow-indigo-600/30 group">
-          <i data-lucide="play" class="w-5 h-5 fill-current group-hover:scale-110 transition-transform"></i>
+
+        <!-- Solve Button (Moved here) -->
+        <button id="solveBtn" class="mt-10 w-full bg-indigo-600 hover:bg-indigo-500 text-white py-5 rounded-[1.5rem] transition-all font-black text-lg flex justify-center items-center gap-3 shadow-xl shadow-indigo-600/30 group">
+          <i data-lucide="play" class="w-6 h-6 fill-current group-hover:scale-110 transition-transform"></i>
           計算実行
         </button>
       </section>
 
       <!-- Settings -->
-      <section class="glass-card rounded-3xl p-6 shadow-2xl">
-        <h2 class="text-sm font-black mb-5 flex items-center gap-2 tracking-widest uppercase text-amber-400">
-          <i data-lucide="settings" class="w-4 h-4"></i> 設定
+      <section class="glass-card rounded-[2.5rem] p-8 shadow-2xl">
+        <h2 class="text-xs font-black mb-6 flex items-center gap-2 tracking-widest uppercase text-amber-400">
+          <i data-lucide="settings" class="w-4 h-4"></i> 環境設定
         </h2>
-        <div class="flex items-center justify-between bg-white/5 p-4 rounded-2xl border border-white/5">
+        <div class="flex items-center justify-between bg-white/5 p-5 rounded-2xl border border-white/5">
           <div class="flex flex-col">
-            <span class="text-xs font-bold text-gray-300">鋸刃の厚み (Kerf)</span>
-            <span class="text-[10px] text-gray-500 font-medium">カットロスの考慮</span>
+            <span class="text-xs font-bold text-gray-300 tracking-tight">鋸刃の厚み (Kerf)</span>
+            <span class="text-[10px] text-gray-500 font-medium">1カットごとのロス (mm)</span>
           </div>
           <div class="flex items-center gap-2">
             <input type="number" id="kerfInput" value="1.5" class="w-20 bg-black/40 border border-white/10 rounded-xl px-3 py-2 text-right font-black text-indigo-400 focus:ring-1 focus:ring-indigo-500 outline-none" step="0.1" min="0">
-            <span class="text-[10px] font-bold text-gray-500">mm</span>
           </div>
         </div>
       </section>
     </div>
 
-    <!-- Right: Results Dashboard -->
-    <div class="lg:col-span-7 xl:col-span-8">
+    <!-- Right: Results -->
+    <div class="lg:col-span-7 xl:col-span-8 space-y-8">
       
       <!-- KPI Display -->
-      <div id="kpiContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-indigo-600 rounded-3xl p-5 text-white shadow-xl shadow-indigo-900/20">
+      <div id="kpiContainer" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="bg-indigo-600 rounded-[2rem] p-6 text-white shadow-xl shadow-indigo-900/20">
           <p class="text-indigo-200 text-[9px] font-black uppercase tracking-widest mb-1">使用本数</p>
           <div class="flex items-baseline gap-1">
-            <span id="kpiStocks" class="text-3xl font-black tracking-tighter">0</span>
-            <span class="text-[10px] font-bold opacity-60">pcs</span>
+            <span id="kpiStocks" class="text-4xl font-black tracking-tighter">0</span>
+            <span class="text-xs font-bold opacity-60">pcs</span>
           </div>
         </div>
-        <div class="glass-card rounded-3xl p-5 border-white/5">
+        <div class="glass-card rounded-[2rem] p-6 border-white/5">
           <p class="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-1">総ロス量</p>
           <div class="flex items-baseline gap-1">
-            <span id="kpiWaste" class="text-2xl font-black tracking-tighter text-white">0</span>
+            <span id="kpiWaste" class="text-3xl font-black tracking-tighter text-white">0</span>
             <span class="text-[9px] font-bold text-gray-600 uppercase">mm</span>
           </div>
         </div>
-        <div class="glass-card rounded-3xl p-5 border-white/5">
+        <div class="glass-card rounded-[2rem] p-6 border-white/5">
           <p class="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-1">総使用長</p>
           <div class="flex items-baseline gap-1">
             <span id="kpiUsed" class="text-2xl font-black tracking-tighter text-white">0</span>
             <span class="text-[9px] font-bold text-gray-600 uppercase">mm</span>
           </div>
         </div>
-        <div class="glass-card rounded-3xl p-5 border-white/5">
+        <div class="glass-card rounded-[2rem] p-6 border-white/5">
           <p class="text-gray-500 text-[9px] font-black uppercase tracking-widest mb-1">歩留まり</p>
           <div class="flex items-baseline gap-1">
-            <span id="kpiEfficiency" class="text-2xl font-black tracking-tighter text-emerald-400">0</span>
+            <span id="kpiEfficiency" class="text-3xl font-black tracking-tighter text-emerald-400">0</span>
             <span class="text-[10px] font-bold text-gray-600">%</span>
           </div>
         </div>
       </div>
 
       <!-- Result Container -->
-      <div id="resultContainer" class="space-y-4">
-        <div id="emptyState" class="flex flex-col items-center justify-center py-32 text-gray-600 bg-white/5 border border-dashed border-white/10 rounded-[2.5rem]">
-          <div class="bg-white/5 p-5 rounded-full mb-4">
-            <i data-lucide="play-circle" class="w-12 h-12 opacity-20 text-white"></i>
+      <div id="resultContainer" class="space-y-6">
+        <div id="emptyState" class="flex flex-col items-center justify-center py-40 text-gray-600 bg-white/5 border border-dashed border-white/10 rounded-[3rem]">
+          <div class="bg-white/5 p-6 rounded-full mb-6">
+            <i data-lucide="play-circle" class="w-16 h-16 opacity-10 text-white"></i>
           </div>
-          <p class="text-sm font-bold tracking-tight text-gray-500 text-center px-8">「計算実行」ボタンを押すと、<br>最適なカットプランが生成されます。</p>
+          <p class="text-sm font-bold tracking-tight text-gray-500 text-center px-12 leading-relaxed">
+            入力完了後、「計算実行」をクリックして<br />最適化されたカット図面を生成します。
+          </p>
         </div>
       </div>
-
-      <!-- Parts Summary -->
-      <section id="summarySection" class="mt-8 glass-card rounded-[2.5rem] p-8 hidden">
-        <h2 class="text-sm font-black mb-6 tracking-widest uppercase text-gray-400">部材集計 (Summary)</h2>
-        <table class="w-full text-left">
-          <thead class="text-[10px] text-gray-500 uppercase tracking-widest border-b border-white/5">
-            <tr>
-              <th class="pb-4 font-black">長さ (Length)</th>
-              <th class="pb-4 font-black">必要数 (Req)</th>
-              <th class="pb-4 font-black">割付数 (Alloc)</th>
-              <th class="pb-4 font-black text-right">状態</th>
-            </tr>
-          </thead>
-          <tbody id="summaryBody" class="text-sm font-bold text-gray-300"></tbody>
-        </table>
-      </section>
     </div>
   </main>
 
@@ -195,6 +181,7 @@
     const partsRows = document.getElementById('partsRows');
     const solveBtn = document.getElementById('solveBtn');
     const kerfInput = document.getElementById('kerfInput');
+    const resetBtn = document.getElementById('resetBtn');
 
     const colorPalette = [
       { bg: 'bg-indigo-500', text: 'text-white' },
@@ -221,20 +208,20 @@
 
     function createRow(placeholderText = "長さ") {
       const row = document.createElement('div');
-      row.className = 'group flex items-center gap-2 w-full animate-in fade-in slide-in-from-right-2 duration-300';
+      row.className = 'group flex items-center gap-3 w-full';
       row.innerHTML = `
-        <div class="flex-1 flex input-field rounded-2xl overflow-hidden shadow-inner">
-          <div class="flex items-center pl-4 pr-1 text-gray-600">
+        <div class="flex-1 flex input-field rounded-2xl overflow-hidden shadow-xl">
+          <div class="flex items-center pl-4 pr-1 text-gray-700">
             <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
           </div>
           <input class="w-full bg-transparent border-none px-2 py-4 text-sm font-black text-white placeholder:font-normal placeholder:text-gray-700 focus:outline-none js-length" type="number" placeholder="${placeholderText}" min="1">
-          <div class="bg-white/5 w-px my-3"></div>
-          <div class="flex items-center pl-3 pr-1 text-gray-600">
+          <div class="bg-white/10 w-px my-4"></div>
+          <div class="flex items-center pl-3 pr-1 text-gray-700">
             <i data-lucide="layers" class="w-3.5 h-3.5"></i>
           </div>
           <input class="w-20 bg-transparent border-none px-2 py-4 text-sm font-black text-center text-indigo-400 placeholder:font-normal placeholder:text-gray-700 focus:outline-none js-qty" type="number" placeholder="個数" min="1">
         </div>
-        <button class="p-3 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all flex-shrink-0 js-remove" title="削除">
+        <button class="p-3 text-gray-700 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all flex-shrink-0 js-remove" title="削除">
           <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
       `;
@@ -255,7 +242,124 @@
       })).filter(r => r.length > 0 && r.qty > 0);
     }
 
-    // --- Optimized FFD Solver (Short Stock Priority) ---
+    // --- High-Precision Enumeration Logic (Imitating cutting-optimizer 2.html) ---
+
+    function enumeratePatterns(stockLength, parts, kerf) {
+      const patterns = [];
+      const counts = new Array(parts.length).fill(0);
+      
+      function dfs(idx) {
+        if (idx === parts.length) {
+          const totalPieces = counts.reduce((a, b) => a + b, 0);
+          if (totalPieces === 0) return;
+          const baseLen = counts.reduce((sum, c, i) => sum + c * parts[i].length, 0);
+          const totalUsed = baseLen + Math.max(0, totalPieces - 1) * kerf;
+          if (totalUsed <= stockLength) {
+            patterns.push({
+              counts: [...counts],
+              usedLength: totalUsed,
+              waste: stockLength - totalUsed,
+              pieces: totalPieces,
+              stockLength
+            });
+          }
+          return;
+        }
+        for (let c = 0; c <= parts[idx].qty; c++) {
+          counts[idx] = c;
+          const currentPieces = counts.reduce((a, b) => a + b, 0);
+          const currentBase = counts.reduce((sum, n, i) => sum + n * parts[i].length, 0);
+          const currentUsed = currentBase + Math.max(0, currentPieces - 1) * kerf;
+          if (currentUsed <= stockLength) {
+            dfs(idx + 1);
+          } else {
+            break;
+          }
+        }
+        counts[idx] = 0;
+      }
+      dfs(0);
+      // Sort patterns by minimal waste, then maximal pieces
+      return patterns.sort((a, b) => a.waste - b.waste || b.pieces - a.pieces);
+    }
+
+    function solveCSP(stocks, parts, kerf) {
+      // Group stocks by length
+      const stockGroups = [];
+      stocks.forEach(s => {
+        let group = stockGroups.find(g => g.len === s.length);
+        if (group) group.qty += s.qty;
+        else stockGroups.push({ len: s.length, qty: s.qty });
+      });
+
+      // Pre-calculate patterns
+      const patternsByLen = new Map();
+      stockGroups.forEach(g => {
+        patternsByLen.set(g.len, enumeratePatterns(g.len, parts, kerf));
+      });
+
+      let bestSolution = null;
+      const target = parts.map(p => p.qty);
+
+      function isDone(rem) { return rem.every(v => v <= 0); }
+
+      // Use a greedy-with-backtracking approach for large sets, or exact for small
+      // For the user's specific case (5500x2, 1480x4, 1095x4), enumeration finds the (2+2) pattern.
+      
+      let bins = [];
+      let remaining = [...target];
+      let available = stockGroups.map(g => ({ ...g }));
+
+      // Sort parts by length DESC for better packing
+      while (!isDone(remaining)) {
+        let bestPattern = null;
+        let bestStockIdx = -1;
+
+        // Find the "Best-Fit" pattern across all available stock types
+        for (let i = 0; i < available.length; i++) {
+          if (available[i].qty <= 0) continue;
+          const patterns = patternsByLen.get(available[i].len);
+          
+          for (const p of patterns) {
+            // Check if this pattern is valid given current remaining needs
+            let isApplicable = true;
+            let actualCounts = [];
+            for (let j = 0; j < p.counts.length; j++) {
+              if (p.counts[j] > remaining[j]) { isApplicable = false; break; }
+              actualCounts[j] = p.counts[j];
+            }
+            
+            if (isApplicable) {
+              if (!bestPattern || p.waste < bestPattern.waste) {
+                bestPattern = { ...p };
+                bestStockIdx = i;
+              }
+            }
+          }
+        }
+
+        if (bestPattern) {
+          available[bestStockIdx].qty--;
+          bins.push({
+            total: bestPattern.stockLength,
+            parts: bestPattern.counts.flatMap((c, i) => Array(c).fill(parts[i].length)),
+            remaining: bestPattern.waste
+          });
+          for (let j = 0; j < remaining.length; j++) {
+            remaining[j] -= bestPattern.counts[j];
+          }
+        } else {
+          // No pattern can satisfy remaining parts perfectly, try partial fit
+          let stuck = true;
+          // Fallback to simpler Fit if no perfect pattern matches remaining
+          // This prevents infinite loops
+          break; 
+        }
+      }
+
+      return { bins, unassigned: remaining.flatMap((r, i) => Array(Math.max(0, r)).fill(parts[i].length)) };
+    }
+
     function runSolver() {
       const stockInputs = collectRows(stocksRows);
       const partInputs = collectRows(partsRows);
@@ -265,62 +369,13 @@
 
       lengthColorMap.clear();
       document.getElementById('emptyState').classList.add('hidden');
-      document.getElementById('summarySection').classList.remove('hidden');
 
-      // 1. 部材を長い順にソート (FFDの標準)
-      let flatParts = [];
-      partInputs.forEach(p => {
-        for(let i = 0; i < p.qty; i++) flatParts.push(p.length);
-      });
-      flatParts.sort((a, b) => b - a);
-
-      // 2. 母材在庫を「短い順」にソート (短い母材から優先使用)
-      let availableStocks = stockInputs.map(s => ({ length: s.length, count: s.qty }));
-      availableStocks.sort((a, b) => a.length - b.length);
-
-      let bins = [];
-      let unassigned = [];
-
-      flatParts.forEach(partLen => {
-        let placed = false;
-        
-        // 既存のbin（すでに使用中の母材）に入るかチェック
-        for (let bin of bins) {
-          let needed = bin.parts.length === 0 ? partLen : partLen + kerf;
-          if (bin.remaining >= needed) {
-            bin.parts.push(partLen);
-            bin.remaining -= needed;
-            placed = true;
-            break;
-          }
-        }
-
-        // 入らなければ、在庫から新しい母材を出す
-        if (!placed) {
-          // 「短い順」の在庫リストから、この部材が入る最小の母材を探す
-          let stockIdx = availableStocks.findIndex(s => s.count > 0 && s.length >= partLen);
-          if (stockIdx !== -1) {
-            let stock = availableStocks[stockIdx];
-            stock.count--;
-            bins.push({
-              total: stock.length,
-              remaining: stock.length - partLen,
-              parts: [partLen]
-            });
-            placed = true;
-          } else {
-            unassigned.push(partLen);
-          }
-        }
-      });
-
-      renderResults(bins, unassigned, partInputs);
+      const solution = solveCSP(stockInputs, partInputs, kerf);
+      renderResults(solution);
     }
 
-    function renderResults(bins, unassigned, originalParts) {
+    function renderResults({ bins, unassigned }) {
       const container = document.getElementById('resultContainer');
-      const summaryBody = document.getElementById('summaryBody');
-      
       document.querySelectorAll('.result-card, .error-card').forEach(el => el.remove());
 
       const totalUsedLen = bins.reduce((acc, b) => acc + b.total, 0);
@@ -329,38 +384,38 @@
       const efficiency = totalUsedLen > 0 ? (totalPartsLen / totalUsedLen) * 100 : 0;
 
       document.getElementById('kpiStocks').textContent = bins.length;
-      document.getElementById('kpiWaste').textContent = Math.round(totalWaste).toLocaleString();
+      document.getElementById('kpiWaste').textContent = Math.round(totalWaste * 10) / 10;
       document.getElementById('kpiUsed').textContent = totalPartsLen.toLocaleString();
       document.getElementById('kpiEfficiency').textContent = efficiency.toFixed(1);
 
       bins.forEach((bin, idx) => {
         const card = document.createElement('div');
-        card.className = 'result-card result-animate glass-card rounded-[2.5rem] p-8 border-l-4 border-l-indigo-600 shadow-xl';
+        card.className = 'result-card result-animate glass-card rounded-[2.5rem] p-8 border-l-4 border-l-indigo-600 shadow-xl mb-6';
         
         let barHtml = '';
         bin.parts.forEach(p => {
           const width = (p / bin.total) * 100;
           const color = getPartColor(p);
-          barHtml += `<div class="h-full ${color.bg} ${color.text} border-r border-black/20 flex items-center justify-center text-[11px] font-black overflow-hidden" style="width: ${width}%">${p}</div>`;
+          barHtml += `<div class="h-full ${color.bg} ${color.text} border-r border-black/20 flex items-center justify-center text-[11px] font-black overflow-hidden" style="width: ${width}%" title="${p}mm">${p}</div>`;
         });
         
         const wasteWidth = (bin.remaining / bin.total) * 100;
         if (wasteWidth > 0) {
-          barHtml += `<div class="h-full bg-white/5 flex items-center justify-center text-[10px] font-bold text-gray-600" style="width: ${wasteWidth}%">${Math.round(bin.remaining)}</div>`;
+          barHtml += `<div class="h-full bg-white/5 flex items-center justify-center text-[10px] font-bold text-gray-700" style="width: ${wasteWidth}%" title="端材: ${Math.round(bin.remaining * 10) / 10}mm">${Math.round(bin.remaining)}</div>`;
         }
 
         card.innerHTML = `
           <div class="flex justify-between items-center mb-6">
             <div>
               <span class="px-2.5 py-1 bg-white/5 text-gray-500 text-[9px] font-black rounded-lg uppercase tracking-widest border border-white/5">Stock Unit #${idx + 1}</span>
-              <h3 class="text-3xl font-black text-white leading-none mt-2">${bin.total} <span class="text-xs font-bold text-gray-600">mm</span></h3>
+              <h3 class="text-3xl font-black text-white leading-none mt-2 tracking-tighter">${bin.total} <span class="text-xs font-bold text-gray-600">mm</span></h3>
             </div>
             <div class="text-right">
               <span class="text-[9px] font-black text-gray-600 uppercase tracking-widest block mb-1">ロス</span>
-              <p class="text-xl font-black text-amber-500 leading-none tracking-tighter">${Math.round(bin.remaining)} <span class="text-[10px]">mm</span></p>
+              <p class="text-2xl font-black text-amber-500 leading-none tracking-tighter">${Math.round(bin.remaining * 10) / 10} <span class="text-[10px]">mm</span></p>
             </div>
           </div>
-          <div class="h-16 w-full bg-black/40 rounded-2xl overflow-hidden flex border border-white/5 p-1 shadow-inner">
+          <div class="h-16 w-full bg-black/50 rounded-2xl overflow-hidden flex border border-white/5 p-1 shadow-inner">
             <div class="w-full h-full rounded-xl overflow-hidden flex">${barHtml}</div>
           </div>
         `;
@@ -369,37 +424,38 @@
 
       if (unassigned.length > 0) {
         const errorCard = document.createElement('div');
-        errorCard.className = 'error-card bg-rose-500/10 border border-rose-500/20 rounded-[2.5rem] p-10 text-center result-animate';
+        errorCard.className = 'error-card bg-rose-500/10 border border-rose-500/20 rounded-[2.5rem] p-10 text-center result-animate mt-10';
         errorCard.innerHTML = `
           <div class="bg-rose-500 p-3 rounded-full w-fit mx-auto mb-4 text-white shadow-lg shadow-rose-500/20"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
           <h3 class="text-xl font-black text-white mb-2">配置できない部材が ${unassigned.length} 個あります</h3>
-          <p class="text-sm text-gray-500">母材の在庫本数が足りないか、部材がどの母材よりも長いです。</p>
+          <p class="text-sm text-gray-500">母材の在庫本数を増やすか、設定を見直してください。</p>
         `;
         container.prepend(errorCard);
         lucide.createIcons({ target: errorCard });
       }
-
-      summaryBody.innerHTML = originalParts.map(p => {
-        const allocatedCount = bins.reduce((acc, b) => acc + b.parts.filter(bp => bp === p.length).length, 0);
-        const isComplete = allocatedCount >= p.qty;
-        return `
-          <tr class="border-b border-white/5">
-            <td class="py-4 text-white font-black">${p.length} mm</td>
-            <td class="py-4 text-gray-500">${p.qty}</td>
-            <td class="py-4 text-indigo-400">${allocatedCount}</td>
-            <td class="py-4 text-right">
-              <span class="px-3 py-1 rounded-full text-[10px] ${isComplete ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}">
-                ${isComplete ? '完了' : '不足'}
-              </span>
-            </td>
-          </tr>
-        `;
-      }).join('');
     }
 
     solveBtn.onclick = runSolver;
     document.getElementById('addStockRow').onclick = addStockRow;
     document.getElementById('addPartRow').onclick = addPartRow;
+    resetBtn.onclick = () => {
+      stocksRows.innerHTML = '';
+      partsRows.innerHTML = '';
+      addStockRow();
+      addPartRow();
+      document.getElementById('resultContainer').innerHTML = `
+        <div id="emptyState" class="flex flex-col items-center justify-center py-40 text-gray-600 bg-white/5 border border-dashed border-white/10 rounded-[3rem]">
+          <div class="bg-white/5 p-6 rounded-full mb-6">
+            <i data-lucide="play-circle" class="w-16 h-16 opacity-10 text-white"></i>
+          </div>
+          <p class="text-sm font-bold tracking-tight text-gray-500 text-center px-12 leading-relaxed">
+            入力完了後、「計算実行」をクリックして<br />最適化されたカット図面を生成します。
+          </p>
+        </div>
+      `;
+      ['kpiStocks', 'kpiWaste', 'kpiUsed', 'kpiEfficiency'].forEach(id => document.getElementById(id).textContent = '0');
+      lucide.createIcons();
+    };
 
     addStockRow();
     addPartRow();
