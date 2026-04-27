@@ -8,8 +8,8 @@
   <!-- Android Chrome用 (ホーム画面ショートカット/PWAアイコン) -->
   <link rel="icon" href="android-chrome-192.png" sizes="192x192" type="image/png">
   <!-- 共通ファビコン -->
-  <link rel="icon" href="favicon.png" sizes="any">
-  <title>Cutting Optimizer</title>
+    <link rel="icon" href="favicon.png" sizes="any">
+  <title>Cutting Optimizer Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
@@ -64,18 +64,15 @@
         </div>
         <div>
           <h1 class="text-xl font-black tracking-tighter text-white italic">CUT <span class="text-indigo-400 uppercase">Optimizer</span></h1>
-          <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">High-Precision Solver</p>
+          <p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest leading-none">Fast & High Performance</p>
         </div>
       </div>
-      <button id="sampleBtn" class="bg-white/5 hover:bg-white/10 text-white px-5 py-2 rounded-xl transition-all font-bold text-sm flex items-center gap-2 border border-white/10">
-        <i data-lucide="zap" class="w-4 h-4 text-indigo-400"></i> サンプル読込
-      </button>
     </div>
   </nav>
 
   <main class="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
     
-    <!-- Left: Inputs (Fixed Width on Desktop) -->
+    <!-- Left: Inputs -->
     <div class="lg:col-span-5 xl:col-span-4 space-y-6">
       
       <!-- Stocks -->
@@ -101,6 +98,12 @@
         <div id="partsRows" class="space-y-3 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1"></div>
         <button id="addPartRow" class="mt-4 w-full py-3 border border-dashed border-white/10 rounded-2xl text-gray-500 hover:border-rose-500/50 hover:text-rose-400 hover:bg-rose-500/5 transition-all font-bold flex justify-center items-center gap-2 text-sm">
           <i data-lucide="plus" class="w-4 h-4"></i> 部材を追加
+        </button>
+        
+        <!-- Moved Calculation Button Here -->
+        <button id="solveBtn" class="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl transition-all font-black text-base flex justify-center items-center gap-3 shadow-lg shadow-indigo-600/30 group">
+          <i data-lucide="play" class="w-5 h-5 fill-current group-hover:scale-110 transition-transform"></i>
+          計算実行
         </button>
       </section>
 
@@ -157,17 +160,17 @@
         </div>
       </div>
 
-      <!-- Main Result List -->
+      <!-- Result Container -->
       <div id="resultContainer" class="space-y-4">
         <div id="emptyState" class="flex flex-col items-center justify-center py-32 text-gray-600 bg-white/5 border border-dashed border-white/10 rounded-[2.5rem]">
           <div class="bg-white/5 p-5 rounded-full mb-4">
-            <i data-lucide="drafting-compass" class="w-12 h-12 opacity-20 text-white"></i>
+            <i data-lucide="play-circle" class="w-12 h-12 opacity-20 text-white"></i>
           </div>
-          <p class="text-sm font-bold tracking-tight text-gray-500 text-center px-8">母材と部材を入力してください。<br>最適なカット方案をリアルタイムで算出します。</p>
+          <p class="text-sm font-bold tracking-tight text-gray-500 text-center px-8">「計算実行」ボタンを押すと、<br>最適なカットプランが生成されます。</p>
         </div>
       </div>
 
-      <!-- Parts Summary Table -->
+      <!-- Parts Summary -->
       <section id="summarySection" class="mt-8 glass-card rounded-[2.5rem] p-8 hidden">
         <h2 class="text-sm font-black mb-6 tracking-widest uppercase text-gray-400">部材集計 (Summary)</h2>
         <table class="w-full text-left">
@@ -176,12 +179,10 @@
               <th class="pb-4 font-black">長さ (Length)</th>
               <th class="pb-4 font-black">必要数 (Req)</th>
               <th class="pb-4 font-black">割付数 (Alloc)</th>
-              <th class="pb-4 font-black text-right">充足率</th>
+              <th class="pb-4 font-black text-right">状態</th>
             </tr>
           </thead>
-          <tbody id="summaryBody" class="text-sm font-bold text-gray-300">
-            <!-- Summary rows injected here -->
-          </tbody>
+          <tbody id="summaryBody" class="text-sm font-bold text-gray-300"></tbody>
         </table>
       </section>
     </div>
@@ -192,6 +193,7 @@
 
     const stocksRows = document.getElementById('stocksRows');
     const partsRows = document.getElementById('partsRows');
+    const solveBtn = document.getElementById('solveBtn');
     const kerfInput = document.getElementById('kerfInput');
 
     const colorPalette = [
@@ -232,18 +234,13 @@
           </div>
           <input class="w-20 bg-transparent border-none px-2 py-4 text-sm font-black text-center text-indigo-400 placeholder:font-normal placeholder:text-gray-700 focus:outline-none js-qty" type="number" placeholder="個数" min="1">
         </div>
-        <button class="p-3 text-gray-700 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all flex-shrink-0 js-remove" title="削除">
-          <i data-lucide="x" class="w-4 h-4"></i>
+        <button class="p-3 text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all flex-shrink-0 js-remove" title="削除">
+          <i data-lucide="trash-2" class="w-4 h-4"></i>
         </button>
       `;
       
       const removeBtn = row.querySelector('.js-remove');
-      removeBtn.onclick = () => {
-        row.remove();
-        scheduleAutoRun();
-      };
-      
-      row.querySelectorAll('input').forEach(i => i.addEventListener('input', scheduleAutoRun));
+      removeBtn.onclick = () => row.remove();
       lucide.createIcons({ props: { "stroke-width": 2.5 }, target: row });
       return row;
     }
@@ -258,267 +255,136 @@
       })).filter(r => r.length > 0 && r.qty > 0);
     }
 
-    let debounceTimer;
-    function scheduleAutoRun() {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(runSolver, 150);
-    }
-
-    function clearResults() {
-      document.getElementById('emptyState').classList.remove('hidden');
-      document.getElementById('summarySection').classList.add('hidden');
-      document.querySelectorAll('.result-card, .error-card').forEach(el => el.remove());
-      ['kpiStocks', 'kpiWaste', 'kpiUsed', 'kpiEfficiency'].forEach(id => document.getElementById(id).textContent = '0');
-    }
-
-    // --- High-Precision CSP Solver (from uploaded logic) ---
-
-    function enumeratePatterns(stockLength, parts, kerf) {
-      const patterns = [];
-      const counts = new Array(parts.length).fill(0);
-      
-      function dfs(index) {
-        if (index === parts.length) {
-          const totalPieces = counts.reduce((a, b) => a + b, 0);
-          if (!totalPieces) return;
-          const baseLength = counts.reduce((acc, c, i) => acc + c * parts[i].length, 0);
-          const usedLength = baseLength + Math.max(0, totalPieces - 1) * kerf;
-          if (usedLength <= stockLength) {
-            patterns.push({
-              counts: counts.slice(),
-              usedLength,
-              waste: stockLength - usedLength,
-              pieces: totalPieces,
-              stockLength
-            });
-          }
-          return;
-        }
-        for (let c = 0; c <= parts[index].qty; c++) {
-          counts[index] = c;
-          const totalPieces = counts.reduce((a, b) => a + b, 0);
-          const baseLength = counts.reduce((acc, n, i) => acc + n * parts[i].length, 0);
-          const usedLength = baseLength + Math.max(0, totalPieces - 1) * kerf;
-          if (usedLength <= stockLength) {
-            dfs(index + 1);
-          } else {
-            break;
-          }
-        }
-        counts[index] = 0;
-      }
-      dfs(0);
-      // Sort patterns: least waste first, then most pieces
-      patterns.sort((a, b) => a.waste - b.waste || b.pieces - a.pieces);
-      return patterns;
-    }
-
-    function chooseBetter(candidate, best) {
-      if (!best) return true;
-      if (candidate.totalStocksUsed !== best.totalStocksUsed) return candidate.totalStocksUsed < best.totalStocksUsed;
-      if (candidate.totalWaste !== best.totalWaste) return candidate.totalWaste < best.totalWaste;
-      return candidate.totalSupply < best.totalSupply;
-    }
-
-    function solveCSP(stocks, parts, kerf) {
-      // 1. Pre-calculate patterns per stock length
-      const patternsByLength = new Map();
-      const uniqueStockLengths = [...new Set(stocks.map(s => s.stockLength))];
-      uniqueStockLengths.forEach(len => {
-        patternsByLength.set(len, enumeratePatterns(len, parts, kerf));
-      });
-
-      const target = parts.map(p => p.qty);
-      let bestSolution = null;
-
-      function isDone(remaining) { return remaining.every(v => v === 0); }
-
-      // 2. DFS for global optimization
-      function dfsSolve(stockIdx, remaining, chosen, usedLength, totalSupply) {
-        // Stop recursion if too complex or already found something better
-        if (bestSolution && chosen.length >= bestSolution.totalStocksUsed) {
-           // We only care about fewer or equal stocks with better waste
-           if (chosen.length > bestSolution.totalStocksUsed) return;
-        }
-
-        if (isDone(remaining)) {
-          const candidate = {
-            chosen: chosen.map(x => ({ ...x, counts: x.counts.slice() })),
-            totalWaste: totalSupply - usedLength,
-            totalStocksUsed: chosen.length,
-            usedLength,
-            totalSupply
-          };
-          if (chooseBetter(candidate, bestSolution)) bestSolution = candidate;
-          return;
-        }
-
-        if (stockIdx >= stocks.length) return;
-
-        // Choice 1: Skip this stock (only if we have more stocks later)
-        dfsSolve(stockIdx + 1, remaining, chosen, usedLength, totalSupply);
-
-        // Choice 2: Try patterns for this stock
-        const currentStock = stocks[stockIdx];
-        const patterns = patternsByLength.get(currentStock.stockLength) || [];
-
-        for (const pattern of patterns) {
-          let valid = false;
-          const nextRemaining = remaining.slice();
-          const adjustedCounts = pattern.counts.map((c, i) => {
-            const take = Math.min(c, nextRemaining[i]);
-            if (take > 0) valid = true;
-            nextRemaining[i] -= take;
-            return take;
-          });
-
-          if (!valid) continue;
-
-          const adjustedPieces = adjustedCounts.reduce((a, b) => a + b, 0);
-          const baseLen = adjustedCounts.reduce((acc, c, i) => acc + c * parts[i].length, 0);
-          const adjUsedLen = baseLen + Math.max(0, adjustedPieces - 1) * kerf;
-
-          chosen.push({
-            stockLength: currentStock.stockLength,
-            counts: adjustedCounts,
-            usedLength: adjUsedLen,
-            waste: currentStock.stockLength - adjUsedLen,
-            pieces: adjustedPieces
-          });
-
-          dfsSolve(stockIdx + 1, nextRemaining, chosen, usedLength + adjUsedLen, totalSupply + currentStock.stockLength);
-          
-          chosen.pop();
-
-          // Performance: If we filled everything, don't try worse patterns for same stock
-          if (bestSolution && bestSolution.totalStocksUsed < chosen.length + 1) break; 
-        }
-      }
-
-      // Initial Call (Stocks sorted by length DESC usually helps)
-      const sortedStocks = stocks.sort((a,b) => b.stockLength - a.stockLength);
-      dfsSolve(0, target, [], 0, 0);
-      return bestSolution;
-    }
-
-    // --- UI Logic ---
-
+    // --- Fast FFD Solver ---
     function runSolver() {
       const stockInputs = collectRows(stocksRows);
       const partInputs = collectRows(partsRows);
       const kerf = Number(kerfInput.value) || 0;
 
-      if (!stockInputs.length || !partInputs.length) {
-        clearResults();
-        return;
-      }
+      if (!stockInputs.length || !partInputs.length) return;
 
       lengthColorMap.clear();
       document.getElementById('emptyState').classList.add('hidden');
+      document.getElementById('summarySection').classList.remove('hidden');
 
-      // Expand stocks into a list
-      const flattenedStocks = stockInputs.flatMap(s => 
-        Array.from({ length: s.qty }, () => ({ stockLength: s.length }))
-      );
+      let flatParts = [];
+      partInputs.forEach(p => {
+        for(let i = 0; i < p.qty; i++) flatParts.push(p.length);
+      });
+      flatParts.sort((a, b) => b - a);
 
-      const result = solveCSP(flattenedStocks, partInputs, kerf);
-      renderResults(result, partInputs);
+      let availableStocks = stockInputs.map(s => ({ length: s.length, count: s.qty }));
+      availableStocks.sort((a, b) => b.length - a.length);
+
+      let bins = [];
+      let unassigned = [];
+
+      flatParts.forEach(partLen => {
+        let placed = false;
+        
+        for (let bin of bins) {
+          let needed = bin.parts.length === 0 ? partLen : partLen + kerf;
+          if (bin.remaining >= needed) {
+            bin.parts.push(partLen);
+            bin.remaining -= needed;
+            placed = true;
+            break;
+          }
+        }
+
+        if (!placed) {
+          let stockIdx = availableStocks.findIndex(s => s.count > 0 && s.length >= partLen);
+          if (stockIdx !== -1) {
+            let stock = availableStocks[stockIdx];
+            stock.count--;
+            bins.push({
+              total: stock.length,
+              remaining: stock.length - partLen,
+              parts: [partLen]
+            });
+            placed = true;
+          } else {
+            unassigned.push(partLen);
+          }
+        }
+      });
+
+      renderResults(bins, unassigned, partInputs);
     }
 
-    function renderResults(result, parts) {
+    function renderResults(bins, unassigned, originalParts) {
       const container = document.getElementById('resultContainer');
       const summaryBody = document.getElementById('summaryBody');
-      const summarySection = document.getElementById('summarySection');
       
       document.querySelectorAll('.result-card, .error-card').forEach(el => el.remove());
 
-      if (!result) {
-        const errorCard = document.createElement('div');
-        errorCard.className = 'error-card bg-rose-500/10 border border-rose-500/20 rounded-[2.5rem] p-10 text-center';
-        errorCard.innerHTML = `
-          <div class="bg-rose-500 p-3 rounded-full w-fit mx-auto mb-4 text-white shadow-lg shadow-rose-500/20">
-            <i data-lucide="alert-triangle" class="w-8 h-8"></i>
-          </div>
-          <h3 class="text-xl font-black text-white mb-2">割付可能な組み合わせがありません</h3>
-          <p class="text-sm text-gray-500">母材の長さが部材に対して短すぎるか、母材の本数が足りません。</p>
-        `;
-        container.appendChild(errorCard);
-        lucide.createIcons({ target: errorCard });
-        summarySection.classList.add('hidden');
-        return;
-      }
+      const totalUsedLen = bins.reduce((acc, b) => acc + b.total, 0);
+      const totalPartsLen = bins.reduce((acc, b) => acc + b.parts.reduce((s, p) => s + p, 0), 0);
+      const totalWaste = totalUsedLen - totalPartsLen;
+      const efficiency = totalUsedLen > 0 ? (totalPartsLen / totalUsedLen) * 100 : 0;
 
-      // Update KPIs
-      const yieldRatio = (result.usedLength / result.totalSupply) * 100;
-      document.getElementById('kpiStocks').textContent = result.totalStocksUsed;
-      document.getElementById('kpiWaste').textContent = Math.round(result.totalWaste).toLocaleString();
-      document.getElementById('kpiUsed').textContent = Math.round(result.usedLength).toLocaleString();
-      document.getElementById('kpiEfficiency').textContent = yieldRatio.toFixed(1);
+      document.getElementById('kpiStocks').textContent = bins.length;
+      document.getElementById('kpiWaste').textContent = Math.round(totalWaste).toLocaleString();
+      document.getElementById('kpiUsed').textContent = totalPartsLen.toLocaleString();
+      document.getElementById('kpiEfficiency').textContent = efficiency.toFixed(1);
 
-      // Render Cut Plans
-      result.chosen.forEach((stock, idx) => {
+      bins.forEach((bin, idx) => {
         const card = document.createElement('div');
         card.className = 'result-card result-animate glass-card rounded-[2.5rem] p-8 border-l-4 border-l-indigo-600 shadow-xl';
         
         let barHtml = '';
-        stock.counts.forEach((qty, partIdx) => {
-          const pLen = parts[partIdx].length;
-          const width = (pLen / stock.stockLength) * 100;
-          const color = getPartColor(pLen);
-          
-          for(let i=0; i<qty; i++) {
-            barHtml += `
-              <div class="h-full ${color.bg} ${color.text} border-r border-black/20 flex items-center justify-center text-[11px] font-black overflow-hidden whitespace-nowrap transition-all hover:brightness-110 cursor-help" 
-                   style="width: ${width}%" title="部材: ${pLen}mm">
-                ${pLen}
-              </div>
-            `;
-          }
+        bin.parts.forEach(p => {
+          const width = (p / bin.total) * 100;
+          const color = getPartColor(p);
+          barHtml += `<div class="h-full ${color.bg} ${color.text} border-r border-black/20 flex items-center justify-center text-[11px] font-black overflow-hidden" style="width: ${width}%">${p}</div>`;
         });
         
-        const wasteWidth = (stock.waste / stock.stockLength) * 100;
+        const wasteWidth = (bin.remaining / bin.total) * 100;
         if (wasteWidth > 0) {
-          barHtml += `
-            <div class="h-full bg-white/5 flex items-center justify-center text-[10px] font-bold text-gray-600 overflow-hidden" 
-                 style="width: ${wasteWidth}%">
-              ${Math.round(stock.waste)}
-            </div>
-          `;
+          barHtml += `<div class="h-full bg-white/5 flex items-center justify-center text-[10px] font-bold text-gray-600" style="width: ${wasteWidth}%">${Math.round(bin.remaining)}</div>`;
         }
 
         card.innerHTML = `
           <div class="flex justify-between items-center mb-6">
             <div>
               <span class="px-2.5 py-1 bg-white/5 text-gray-500 text-[9px] font-black rounded-lg uppercase tracking-widest border border-white/5">Stock Unit #${idx + 1}</span>
-              <h3 class="text-3xl font-black text-white leading-none mt-2">${stock.stockLength} <span class="text-xs font-bold text-gray-600">mm</span></h3>
+              <h3 class="text-3xl font-black text-white leading-none mt-2">${bin.total} <span class="text-xs font-bold text-gray-600">mm</span></h3>
             </div>
             <div class="text-right">
               <span class="text-[9px] font-black text-gray-600 uppercase tracking-widest block mb-1">ロス</span>
-              <p class="text-xl font-black text-amber-500 leading-none tracking-tighter">${Math.round(stock.waste)} <span class="text-[10px]">mm</span></p>
+              <p class="text-xl font-black text-amber-500 leading-none tracking-tighter">${Math.round(bin.remaining)} <span class="text-[10px]">mm</span></p>
             </div>
           </div>
           <div class="h-16 w-full bg-black/40 rounded-2xl overflow-hidden flex border border-white/5 p-1 shadow-inner">
-            <div class="w-full h-full rounded-xl overflow-hidden flex">
-              ${barHtml}
-            </div>
+            <div class="w-full h-full rounded-xl overflow-hidden flex">${barHtml}</div>
           </div>
         `;
         container.appendChild(card);
       });
 
-      // Render Summary Table
-      summarySection.classList.remove('hidden');
-      summaryBody.innerHTML = parts.map((p, i) => {
-        const allocated = result.chosen.reduce((sum, s) => sum + s.counts[i], 0);
-        const rate = (allocated / p.qty) * 100;
+      if (unassigned.length > 0) {
+        const errorCard = document.createElement('div');
+        errorCard.className = 'error-card bg-rose-500/10 border border-rose-500/20 rounded-[2.5rem] p-10 text-center result-animate';
+        errorCard.innerHTML = `
+          <div class="bg-rose-500 p-3 rounded-full w-fit mx-auto mb-4 text-white shadow-lg shadow-rose-500/20"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
+          <h3 class="text-xl font-black text-white mb-2">配置できない部材が ${unassigned.length} 個あります</h3>
+          <p class="text-sm text-gray-500">母材の在庫本数が足りないか、部材が母材より長いです。</p>
+        `;
+        container.prepend(errorCard);
+        lucide.createIcons({ target: errorCard });
+      }
+
+      summaryBody.innerHTML = originalParts.map(p => {
+        const allocatedCount = bins.reduce((acc, b) => acc + b.parts.filter(bp => bp === p.length).length, 0);
+        const isComplete = allocatedCount >= p.qty;
         return `
           <tr class="border-b border-white/5">
-            <td class="py-4 text-white">${p.length} mm</td>
+            <td class="py-4 text-white font-black">${p.length} mm</td>
             <td class="py-4 text-gray-500">${p.qty}</td>
-            <td class="py-4 text-indigo-400">${allocated}</td>
+            <td class="py-4 text-indigo-400">${allocatedCount}</td>
             <td class="py-4 text-right">
-              <span class="px-3 py-1 rounded-full text-[10px] ${rate >= 100 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}">
-                ${rate.toFixed(0)}%
+              <span class="px-3 py-1 rounded-full text-[10px] ${isComplete ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'}">
+                ${isComplete ? '完了' : '不足'}
               </span>
             </td>
           </tr>
@@ -526,33 +392,10 @@
       }).join('');
     }
 
-    document.getElementById('addStockRow').addEventListener('click', addStockRow);
-    document.getElementById('addPartRow').addEventListener('click', addPartRow);
-    kerfInput.addEventListener('input', scheduleAutoRun);
+    solveBtn.onclick = runSolver;
+    document.getElementById('addStockRow').onclick = addStockRow;
+    document.getElementById('addPartRow').onclick = addPartRow;
 
-    document.getElementById('sampleBtn').addEventListener('click', () => {
-      stocksRows.innerHTML = ''; 
-      partsRows.innerHTML = '';
-      
-      const s1 = createRow();
-      s1.querySelector('.js-length').value = 4000;
-      s1.querySelector('.js-qty').value = 5;
-      stocksRows.appendChild(s1);
-
-      const p1 = createRow();
-      p1.querySelector('.js-length').value = 1480;
-      p1.querySelector('.js-qty').value = 4;
-      partsRows.appendChild(p1);
-
-      const p2 = createRow();
-      p2.querySelector('.js-length').value = 1095;
-      p2.querySelector('.js-qty').value = 4;
-      partsRows.appendChild(p2);
-
-      scheduleAutoRun();
-    });
-
-    // Initial setup
     addStockRow();
     addPartRow();
   </script>
