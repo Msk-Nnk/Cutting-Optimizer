@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- iPhone Safari用 (Webクリップアイコン) -->
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" sizes="180x180">
+  <!-- Android Chrome用 (ホーム画面ショートカット/PWAアイコン) -->
+  <link rel="icon" href="android-chrome-192.png" sizes="192x192" type="image/png">
+  <!-- 共通ファビコン -->
+  <link rel="icon" href="favicon.png" sizes="any">
+  <title>Cutting Optimizer Pro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://api.fontshare.com" />
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Satoshi', sans-serif;
+      background-color: #f8f9fa;
+      color: #1a1a1a;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(229, 231, 235, 1);
+    }
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .result-card {
+      animation: slideUp 0.3s ease-out forwards;
+    }
+  </style>
+</head>
+<body class="min-h-screen pb-12">
+
+  <nav class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 py-3 mb-6">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <div class="bg-slate-800 p-1.5 rounded-lg">
+          <i data-lucide="layout-template" class="text-white w-5 h-5"></i>
+        </div>
+        <h1 class="text-xl font-black tracking-tight text-gray-800">Cutting <span class="text-indigo-600">Optimizer</span></h1>
+      </div>
+      <button id="sampleBtn" class="text-sm font-medium text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-full transition-colors flex items-center gap-2">
+        <i data-lucide="beaker" class="w-4 h-4"></i> サンプル読込
+      </button>
+    </div>
+  </nav>
+
+  <main class="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-8">
+    
+    <!-- Left Column: Inputs -->
+    <div class="lg:col-span-5 space-y-6">
+      <section class="glass-card rounded-2xl p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-bold flex items-center gap-2 text-gray-700">
+            <i data-lucide="box" class="w-5 h-5 text-indigo-500"></i> 母材（在庫）
+          </h2>
+          <span class="text-xs text-gray-400 font-medium">長さ (mm) × 本数</span>
+        </div>
+        <div id="stocksRows" class="space-y-3"></div>
+        <button id="addStockRow" class="mt-4 w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-indigo-300 hover:text-indigo-500 hover:bg-indigo-50/50 transition-all font-medium flex justify-center items-center gap-2 text-sm">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> 母材を追加
+        </button>
+      </section>
+
+      <section class="glass-card rounded-2xl p-6 shadow-sm">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="font-bold flex items-center gap-2 text-gray-700">
+            <i data-lucide="scissors" class="w-5 h-5 text-rose-500"></i> 必要部材（カット）
+          </h2>
+          <span class="text-xs text-gray-400 font-medium">長さ (mm) × 本数</span>
+        </div>
+        <div id="partsRows" class="space-y-3"></div>
+        <button id="addPartRow" class="mt-4 w-full py-3 border-2 border-dashed border-gray-200 rounded-xl text-gray-400 hover:border-rose-300 hover:text-rose-500 hover:bg-rose-50/50 transition-all font-medium flex justify-center items-center gap-2 text-sm">
+          <i data-lucide="plus-circle" class="w-4 h-4"></i> 部材を追加
+        </button>
+      </section>
+
+      <section class="glass-card rounded-2xl p-6 shadow-sm">
+        <h2 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
+          <i data-lucide="settings-2" class="w-5 h-5 text-amber-500"></i> 設定
+        </h2>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-gray-600">鋸刃の厚み (Kerf) <span class="text-[10px] text-gray-400 ml-1">mm</span></label>
+          <input type="number" id="kerfInput" value="1.5" class="w-20 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-right font-bold focus:ring-2 focus:ring-indigo-500 focus:outline-none" min="0" step="0.1">
+        </div>
+      </section>
+    </div>
+
+    <!-- Right Column: Results -->
+    <div class="lg:col-span-7">
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="bg-slate-800 rounded-2xl p-4 text-white shadow-lg shadow-slate-200">
+          <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">使用母材</p>
+          <div class="flex items-baseline gap-1">
+            <span id="kpiStocks" class="text-3xl font-black">0</span>
+            <span class="text-sm opacity-60 font-medium">本</span>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+          <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">総ロス</p>
+          <div class="flex items-baseline gap-1">
+            <span id="kpiWaste" class="text-2xl font-black text-gray-700">0</span>
+            <span class="text-[10px] text-gray-400 font-medium">mm</span>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+          <p class="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1">歩留まり</p>
+          <div class="flex items-baseline gap-1">
+            <span id="kpiEfficiency" class="text-2xl font-black text-emerald-600">0</span>
+            <span class="text-[10px] text-gray-400 font-medium">%</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="resultContainer" class="space-y-4">
+        <div id="emptyState" class="flex flex-col items-center justify-center py-20 text-gray-400 bg-white border border-dashed border-gray-200 rounded-3xl">
+          <i data-lucide="layout" class="w-12 h-12 mb-4 opacity-20"></i>
+          <p class="text-sm text-center px-6">寸法を入力すると、最適化された図面が表示されます</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    lucide.createIcons();
+
+    const stocksRows = document.getElementById('stocksRows');
+    const partsRows = document.getElementById('partsRows');
+    const kerfInput = document.getElementById('kerfInput');
+
+    const colorPalette = [
+      { bg: 'bg-indigo-500', text: 'text-white' },
+      { bg: 'bg-emerald-500', text: 'text-white' },
+      { bg: 'bg-amber-400', text: 'text-amber-950' },
+      { bg: 'bg-rose-500', text: 'text-white' },
+      { bg: 'bg-cyan-500', text: 'text-cyan-950' },
+      { bg: 'bg-violet-500', text: 'text-white' },
+      { bg: 'bg-orange-500', text: 'text-white' },
+      { bg: 'bg-lime-400', text: 'text-lime-950' },
+      { bg: 'bg-fuchsia-500', text: 'text-white' },
+      { bg: 'bg-sky-400', text: 'text-sky-950' }
+    ];
+
+    let lengthColorMap = new Map();
+
+    function getPartColor(length) {
+      if (!lengthColorMap.has(length)) {
+        const colorIdx = lengthColorMap.size % colorPalette.length;
+        lengthColorMap.set(length, colorPalette[colorIdx]);
+      }
+      return lengthColorMap.get(length);
+    }
+
+    function createRow() {
+      const row = document.createElement('div');
+      row.className = 'group flex items-center gap-3 w-full';
+      // 修正ポイント: 削除ボタンの色を text-gray-400 に上げ、flex-shrink-0 を追加
+      row.innerHTML = `
+        <div class="flex-1 flex bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-indigo-500/30 focus-within:border-indigo-500 transition-all shadow-sm">
+          <input class="w-full bg-transparent border-none px-4 py-3 text-sm font-bold placeholder:font-normal placeholder:text-gray-300 focus:outline-none js-length" type="number" placeholder="長さ" min="1">
+          <div class="bg-gray-200 w-px my-2"></div>
+          <input class="w-24 bg-transparent border-none px-4 py-3 text-sm font-bold text-center text-indigo-600 placeholder:font-normal placeholder:text-gray-300 focus:outline-none js-qty" type="number" placeholder="本数" min="1">
+        </div>
+        <button class="p-2 text-gray-400 hover:text-rose-500 transition-all flex-shrink-0 js-remove" title="行を削除">
+          <i data-lucide="x-circle" class="w-5 h-5"></i>
+        </button>
+      `;
+      
+      const removeBtn = row.querySelector('.js-remove');
+      removeBtn.onclick = () => {
+        row.remove();
+        scheduleAutoRun();
+      };
+      
+      row.querySelectorAll('input').forEach(i => i.addEventListener('input', scheduleAutoRun));
+      
+      // 描画を確実にするため target を指定
+      lucide.createIcons({ props: { "stroke-width": 2.5 }, target: row });
+      return row;
+    }
+
+    function addStockRow() { stocksRows.appendChild(createRow()); }
+    function addPartRow() { partsRows.appendChild(createRow()); }
+
+    function collectRows(container) {
+      return [...container.querySelectorAll('.group')].map(row => ({
+        length: Number(row.querySelector('.js-length').value),
+        qty: Number(row.querySelector('.js-qty').value)
+      })).filter(r => r.length > 0 && r.qty > 0);
+    }
+
+    let debounceTimer;
+    function scheduleAutoRun() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const stocks = collectRows(stocksRows);
+        const parts = collectRows(partsRows);
+        const kerf = Number(kerfInput.value) || 0;
+        if (stocks.length && parts.length) {
+          lengthColorMap.clear();
+          runSolver(stocks, parts, kerf);
+        } else {
+          clearResults();
+        }
+      }, 300);
+    }
+
+    function clearResults() {
+      document.getElementById('emptyState').classList.remove('hidden');
+      document.querySelectorAll('.result-card, .error-card').forEach(el => el.remove());
+      document.getElementById('kpiStocks').textContent = '0';
+      document.getElementById('kpiWaste').textContent = '0';
+      document.getElementById('kpiEfficiency').textContent = '0';
+    }
+
+    function runSolver(stockPatterns, partPatterns, kerf) {
+      document.getElementById('emptyState').classList.add('hidden');
+      
+      let flatParts = [];
+      partPatterns.forEach(p => {
+        for(let i=0; i<p.qty; i++) flatParts.push(p.length);
+      });
+      flatParts.sort((a, b) => b - a);
+
+      let availableStocks = [];
+      stockPatterns.forEach(s => {
+        for(let i=0; i<s.qty; i++) availableStocks.push({ total: s.length, remaining: s.length, parts: [] });
+      });
+
+      let unassigned = [];
+      flatParts.forEach(partLength => {
+        let placed = false;
+        for (let stock of availableStocks) {
+          let cost = stock.parts.length === 0 ? partLength : partLength + kerf;
+          if (stock.remaining >= cost) {
+            stock.parts.push(partLength);
+            stock.remaining -= cost;
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) unassigned.push(partLength);
+      });
+
+      const usedStocks = availableStocks.filter(s => s.parts.length > 0);
+      renderResults(usedStocks, unassigned);
+      updateKPIs(usedStocks);
+    }
+
+    function renderResults(usedStocks, unassigned) {
+      const container = document.getElementById('resultContainer');
+      document.querySelectorAll('.result-card, .error-card').forEach(el => el.remove());
+
+      usedStocks.forEach((stock, idx) => {
+        const card = document.createElement('div');
+        card.className = 'result-card glass-card rounded-2xl p-5 shadow-sm border-l-4 border-l-slate-800';
+        
+        let barHtml = '';
+        stock.parts.forEach((p, i) => {
+          const width = (p / stock.total) * 100;
+          const color = getPartColor(p);
+          barHtml += `
+            <div class="h-full ${color.bg} ${color.text} border-r border-black/5 flex items-center justify-center text-[10px] font-bold overflow-hidden whitespace-nowrap transition-all hover:brightness-110" style="width: ${width}%" title="${p}mm">
+              ${p}
+            </div>
+          `;
+        });
+        
+        const wasteWidth = (stock.remaining / stock.total) * 100;
+        if (wasteWidth > 0) {
+          barHtml += `
+            <div class="h-full bg-gray-100 flex items-center justify-center text-[10px] font-bold text-gray-400 overflow-hidden whitespace-nowrap" style="width: ${wasteWidth}%" title="端材: ${Math.round(stock.remaining)}mm">
+              ${Math.round(stock.remaining)}
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <span class="text-[10px] font-black text-gray-300 uppercase tracking-widest">Stock #${idx + 1}</span>
+              <h3 class="text-lg font-black text-slate-700 leading-none">${stock.total} <span class="text-[10px] font-medium text-gray-400">mm</span></h3>
+            </div>
+            <div class="bg-orange-50 px-3 py-1 rounded-full text-right">
+              <span class="text-[10px] font-bold text-orange-400 uppercase block leading-none mb-0.5">ロス</span>
+              <p class="text-xs font-black text-orange-600 leading-none">${Math.round(stock.remaining)} <span class="text-[8px]">mm</span></p>
+            </div>
+          </div>
+          <div class="h-12 w-full bg-gray-50 rounded-xl overflow-hidden flex border border-gray-100 shadow-inner">
+            ${barHtml}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      if (unassigned.length > 0) {
+        const errorCard = document.createElement('div');
+        errorCard.className = 'error-card bg-rose-50 border border-rose-200 rounded-2xl p-5 animate-in fade-in zoom-in duration-300';
+        errorCard.innerHTML = `
+          <h3 class="text-rose-600 font-bold flex items-center gap-2 mb-2 text-sm">
+            <i data-lucide="alert-circle" class="w-4 h-4"></i> 配置不可能な部材があります
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            ${unassigned.map(u => {
+              const color = getPartColor(u);
+              return `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg font-bold text-xs ${color.bg} ${color.text} shadow-sm">${u} mm</span>`;
+            }).join('')}
+          </div>
+        `;
+        container.prepend(errorCard);
+        lucide.createIcons({ target: errorCard });
+      }
+    }
+
+    function updateKPIs(usedStocks) {
+      const totalUsedLength = usedStocks.reduce((sum, s) => sum + s.total, 0);
+      const totalPartsLength = usedStocks.reduce((sum, s) => sum + s.parts.reduce((a, b) => a + b, 0), 0);
+      const totalWaste = totalUsedLength - totalPartsLength;
+      const efficiency = totalUsedLength > 0 ? (totalPartsLength / totalUsedLength) * 100 : 0;
+
+      document.getElementById('kpiStocks').textContent = usedStocks.length;
+      document.getElementById('kpiWaste').textContent = Math.round(totalWaste).toLocaleString();
+      document.getElementById('kpiEfficiency').textContent = efficiency.toFixed(1);
+    }
+
+    document.getElementById('addStockRow').addEventListener('click', addStockRow);
+    document.getElementById('addPartRow').addEventListener('click', addPartRow);
+    kerfInput.addEventListener('input', scheduleAutoRun);
+
+    document.getElementById('sampleBtn').addEventListener('click', () => {
+      stocksRows.innerHTML = ''; 
+      partsRows.innerHTML = '';
+      
+      const s1 = createRow();
+      s1.querySelector('.js-length').value = 3650;
+      s1.querySelector('.js-qty').value = 3;
+      stocksRows.appendChild(s1);
+
+      const pConfigs = [
+        { l: 1200, q: 2 },
+        { l: 800, q: 4 },
+        { l: 450, q: 6 },
+        { l: 300, q: 3 }
+      ];
+
+      pConfigs.forEach(conf => {
+        const p = createRow();
+        p.querySelector('.js-length').value = conf.l;
+        p.querySelector('.js-qty').value = conf.q;
+        partsRows.appendChild(p);
+      });
+
+      scheduleAutoRun();
+    });
+
+    addStockRow();
+    addPartRow();
+  </script>
+</body>
+</html>
