@@ -9,7 +9,7 @@
   <link rel="icon" href="android-chrome-192.png" sizes="192x192" type="image/png">
   <!-- 共通ファビコン -->
   <link rel="icon" href="favicon.png" sizes="any">
-  <title>Cutting Optimizer</title>
+  <title>Cutting Optimizer Pro</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://api.fontshare.com" />
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
@@ -100,7 +100,7 @@
           <i data-lucide="plus" class="w-4 h-4"></i> 部材を追加
         </button>
         
-        <!-- Moved Calculation Button Here -->
+        <!-- Calculation Button -->
         <button id="solveBtn" class="mt-8 w-full bg-indigo-600 hover:bg-indigo-500 text-white py-4 rounded-2xl transition-all font-black text-base flex justify-center items-center gap-3 shadow-lg shadow-indigo-600/30 group">
           <i data-lucide="play" class="w-5 h-5 fill-current group-hover:scale-110 transition-transform"></i>
           計算実行
@@ -255,7 +255,7 @@
       })).filter(r => r.length > 0 && r.qty > 0);
     }
 
-    // --- Fast FFD Solver ---
+    // --- Optimized FFD Solver (Short Stock Priority) ---
     function runSolver() {
       const stockInputs = collectRows(stocksRows);
       const partInputs = collectRows(partsRows);
@@ -267,14 +267,16 @@
       document.getElementById('emptyState').classList.add('hidden');
       document.getElementById('summarySection').classList.remove('hidden');
 
+      // 1. 部材を長い順にソート (FFDの標準)
       let flatParts = [];
       partInputs.forEach(p => {
         for(let i = 0; i < p.qty; i++) flatParts.push(p.length);
       });
       flatParts.sort((a, b) => b - a);
 
+      // 2. 母材在庫を「短い順」にソート (短い母材から優先使用)
       let availableStocks = stockInputs.map(s => ({ length: s.length, count: s.qty }));
-      availableStocks.sort((a, b) => b.length - a.length);
+      availableStocks.sort((a, b) => a.length - b.length);
 
       let bins = [];
       let unassigned = [];
@@ -282,6 +284,7 @@
       flatParts.forEach(partLen => {
         let placed = false;
         
+        // 既存のbin（すでに使用中の母材）に入るかチェック
         for (let bin of bins) {
           let needed = bin.parts.length === 0 ? partLen : partLen + kerf;
           if (bin.remaining >= needed) {
@@ -292,7 +295,9 @@
           }
         }
 
+        // 入らなければ、在庫から新しい母材を出す
         if (!placed) {
+          // 「短い順」の在庫リストから、この部材が入る最小の母材を探す
           let stockIdx = availableStocks.findIndex(s => s.count > 0 && s.length >= partLen);
           if (stockIdx !== -1) {
             let stock = availableStocks[stockIdx];
@@ -368,7 +373,7 @@
         errorCard.innerHTML = `
           <div class="bg-rose-500 p-3 rounded-full w-fit mx-auto mb-4 text-white shadow-lg shadow-rose-500/20"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
           <h3 class="text-xl font-black text-white mb-2">配置できない部材が ${unassigned.length} 個あります</h3>
-          <p class="text-sm text-gray-500">母材の在庫本数が足りないか、部材が母材より長いです。</p>
+          <p class="text-sm text-gray-500">母材の在庫本数が足りないか、部材がどの母材よりも長いです。</p>
         `;
         container.prepend(errorCard);
         lucide.createIcons({ target: errorCard });
@@ -401,3 +406,5 @@
   </script>
 </body>
 </html>
+
+```
